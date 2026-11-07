@@ -26,8 +26,10 @@ import {
   Edit,
   Crown,
   Sparkles,
+  UserCheck,
+  Shield,
 } from 'lucide-react'
-import { format, parseISO, startOfDay, endOfDay, isWithinInterval, subDays, addDays } from 'date-fns'
+import { format, parseISO, startOfDay, endOfDay, isWithinInterval, subDays } from 'date-fns'
 import { pt } from 'date-fns/locale'
 
 interface Booking {
@@ -42,6 +44,14 @@ interface Booking {
   notes: string
   createdAt: string
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled'
+}
+
+interface BarberUser {
+  username: string
+  password: string
+  name: string
+  role: 'admin' | 'barber'
+  avatar?: string
 }
 
 const STATUS_LABELS: Record<Booking['status'], string> = {
@@ -59,6 +69,14 @@ const STATUS_COLORS: Record<Booking['status'], string> = {
 }
 
 const BARBERS = ['King', 'Ricardo', 'Miguel']
+
+// Barber user accounts - in production, store in database/env vars
+const BARBER_USERS: BarberUser[] = [
+  { username: 'king', password: 'king2020', name: 'King', role: 'admin' },
+  { username: 'ricardo', password: 'ricardo2020', name: 'Ricardo', role: 'barber' },
+  { username: 'miguel', password: 'miguel2020', name: 'Miguel', role: 'barber' },
+  { username: 'admin', password: 'kings2020', name: 'Admin', role: 'admin' },
+]
 
 // Demo data - in production this would come from a database
 const DEMO_BOOKINGS: Booking[] = [
@@ -132,9 +150,11 @@ const DEMO_BOOKINGS: Booking[] = [
 export default function AdminPage() {
   const router = useRouter()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
+  const [currentUser, setCurrentUser] = useState<BarberUser | null>(null)
   const [bookings, setBookings] = useState<Booking[]>(DEMO_BOOKINGS)
   const [filterDate, setFilterDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'))
   const [filterBarber, setFilterBarber] = useState<string>('all')
@@ -145,41 +165,57 @@ export default function AdminPage() {
   // Check if already authenticated (sessionStorage)
   useEffect(() => {
     const auth = sessionStorage.getItem('kingsstudio_admin_auth')
-    if (auth === 'true') {
+    const userData = sessionStorage.getItem('kingsstudio_admin_user')
+    if (auth === 'true' && userData) {
       setIsAuthenticated(true)
+      setCurrentUser(JSON.parse(userData))
     }
   }, [])
 
-  // Calculate stats
+  // Calculate stats based on user role
   useEffect(() => {
+    let userBookings = bookings
+
+    // Barbers only see their own bookings
+    if (currentUser?.role === 'barber') {
+      userBookings = bookings.filter(b => b.barber === currentUser.name)
+    }
+
     const today = startOfDay(new Date())
     const weekStart = startOfDay(subDays(new Date(), 6))
     const weekEnd = endOfDay(new Date())
 
-    const todayCount = bookings.filter(b => isWithinInterval(parseISO(b.date), { start: today, end: today })).length
-    const weekCount = bookings.filter(b => isWithinInterval(parseISO(b.date), { start: weekStart, end: weekEnd })).length
-    const pendingCount = bookings.filter(b => b.status === 'pending').length
-    const completedCount = bookings.filter(b => b.status === 'completed').length
+    const todayCount = userBookings.filter(b => isWithinInterval(parseISO(b.date), { start: today, end: today })).length
+    const weekCount = userBookings.filter(b => isWithinInterval(parseISO(b.date), { start: weekStart, end: weekEnd })).length
+    const pendingCount = userBookings.filter(b => b.status === 'pending').length
+    const completedCount = userBookings.filter(b => b.status === 'completed').length
 
     setStats({ today: todayCount, week: weekCount, pending: pendingCount, completed: completedCount })
-  }, [bookings])
+  }, [bookings, currentUser])
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
-    // Simple password - in production use proper auth
-    if (password === 'kings2020') {
+    const user = BARBER_USERS.find(u => u.username === username && u.password === password)
+
+    if (user) {
       setIsAuthenticated(true)
+      setCurrentUser(user)
       sessionStorage.setItem('kingsstudio_admin_auth', 'true')
+      sessionStorage.setItem('kingsstudio_admin_user', JSON.stringify(user))
       setError('')
+      setPassword('')
     } else {
-      setError('Senha incorreta. Tente novamente.')
+      setError('Utilizador ou senha incorretos. Tente novamente.')
     }
   }
 
   const handleLogout = () => {
     setIsAuthenticated(false)
-    sessionStorage.removeItem('kingsstudio_admin_auth')
+    setCurrentUser(null)
+    setUsername('')
     setPassword('')
+    sessionStorage.removeItem('kingsstudio_admin_auth')
+    sessionStorage.removeItem('kingsstudio_admin_user')
   }
 
   const handleStatusChange = (id: string, newStatus: Booking['status']) => {
@@ -199,7 +235,12 @@ export default function AdminPage() {
     }))
   }
 
-  const filteredBookings = bookings
+  // Filter bookings based on user role
+  const userBookings = currentUser?.role === 'barber'
+    ? bookings.filter(b => b.barber === currentUser.name)
+    : bookings
+
+  const filteredBookings = userBookings
     .filter(b => {
       if (filterDate && b.date !== filterDate) return false
       if (filterBarber !== 'all' && b.barber !== filterBarber) return false
@@ -225,7 +266,7 @@ export default function AdminPage() {
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const link = document.createElement('a')
     link.href = URL.createObjectURL(blob)
-    link.download = `kingsstudio-reservas-${format(new Date(), 'yyyy-MM-dd')}.csv`
+    link.download = `kingsstudio-reservas-${currentUser?.name || 'all'}-${format(new Date(), 'yyyy-MM-dd')}.csv`
     link.click()
   }
 
@@ -247,8 +288,26 @@ export default function AdminPage() {
           {/* Login Form */}
           <form onSubmit={handleLogin} className="card-luxury p-8 space-y-6">
             <div>
-              <label htmlFor="password" className="label-field">
-                Senha de Acesso
+              <label htmlFor="username" className="label-field flex items-center gap-2">
+                <User className="w-5 h-5 text-gold-500" aria-hidden="true" />
+                Utilizador
+              </label>
+              <input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="input-field"
+                placeholder="ex: king, ricardo, miguel"
+                autoComplete="username"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="label-field flex items-center gap-2">
+                <Lock className="w-5 h-5 text-gold-500" aria-hidden="true" />
+                Senha
               </label>
               <div className="relative">
                 <input
@@ -259,6 +318,7 @@ export default function AdminPage() {
                   className="input-field pr-12"
                   placeholder="Digite a senha"
                   autoComplete="current-password"
+                  required
                 />
                 <button
                   type="button"
@@ -279,14 +339,30 @@ export default function AdminPage() {
             )}
 
             <button type="submit" className="btn-primary w-full py-3 text-lg">
-              <Lock className="w-5 h-5 mr-2" />
+              <UserCheck className="w-5 h-5 mr-2" />
               Entrar no Painel
             </button>
 
-            <div className="text-center pt-4 border-t border-noir-800">
+            <div className="text-center pt-4 border-t border-noir-800 space-y-3">
               <p className="text-noir-400 text-sm">
-                Senha padrão: <code className="bg-noir-800 px-2 py-1 rounded text-gold-400 font-mono text-xs">kings2020</code>
+                Credenciais de teste:
               </p>
+              <div className="text-left space-y-1 text-xs font-mono bg-noir-800 p-3 rounded-lg">
+                <div className="flex justify-between text-gold-400">
+                  <span><strong>Admin:</strong> admin / kings2020</span>
+                  <Shield className="w-3.5 h-3.5 text-gold-500" />
+                </div>
+                <div className="flex justify-between text-gold-400">
+                  <span><strong>King:</strong> king / king2020</span>
+                  <Crown className="w-3.5 h-3.5 text-gold-500" />
+                </div>
+                <div className="flex justify-between text-gold-400">
+                  <span><strong>Ricardo:</strong> ricardo / ricardo2020</span>
+                </div>
+                <div className="flex justify-between text-gold-400">
+                  <span><strong>Miguel:</strong> miguel / miguel2020</span>
+                </div>
+              </div>
               <Link href="/" className="text-gold-400 hover:text-gold-300 text-sm flex items-center justify-center gap-1 mt-2">
                 <Sparkles className="w-4 h-4" />
                 Voltar ao site
@@ -297,6 +373,9 @@ export default function AdminPage() {
       </div>
     )
   }
+
+  // Determine which barbers to show in filter based on role
+  const availableBarbers = currentUser?.role === 'admin' ? BARBERS : (currentUser ? [currentUser.name] : [])
 
   return (
     <div className="min-h-screen bg-noir-50 dark:bg-noir-1000">
@@ -312,6 +391,18 @@ export default function AdminPage() {
               <span className="hidden sm:block px-3 py-1 bg-gold-500/10 text-gold-400 text-xs font-medium rounded-full border border-gold-500/20">
                 PAINEL ADMIN
               </span>
+              {currentUser?.role === 'barber' && (
+                <span className="px-3 py-1 bg-blue-500/10 text-blue-400 text-xs font-medium rounded-full border border-blue-500/20 flex items-center gap-1">
+                  <User className="w-3 h-3" />
+                  {currentUser.name}
+                </span>
+              )}
+              {currentUser?.role === 'admin' && (
+                <span className="px-3 py-1 bg-purple-500/10 text-purple-400 text-xs font-medium rounded-full border border-purple-500/20 flex items-center gap-1">
+                  <Shield className="w-3 h-3" />
+                  Admin
+                </span>
+              )}
             </div>
 
             <div className="flex items-center gap-4">
@@ -348,15 +439,17 @@ export default function AdminPage() {
                 />
               </div>
 
-              {/* Barber Filter */}
-              <select
-                value={filterBarber}
-                onChange={(e) => setFilterBarber(e.target.value)}
-                className="input-field w-40"
-              >
-                <option value="all">Todos Barbeiros</option>
-                {BARBERS.map(b => <option key={b} value={b}>{b}</option>)}
-              </select>
+              {/* Barber Filter - only for admin */}
+              {currentUser?.role === 'admin' && (
+                <select
+                  value={filterBarber}
+                  onChange={(e) => setFilterBarber(e.target.value)}
+                  className="input-field w-40"
+                >
+                  <option value="all">Todos Barbeiros</option>
+                  {BARBERS.map(b => <option key={b} value={b}>{b}</option>)}
+                </select>
+              )}
 
               {/* Status Filter */}
               <select
@@ -427,7 +520,7 @@ export default function AdminPage() {
                     { key: 'date', label: 'Data' },
                     { key: 'time', label: 'Hora' },
                     { key: 'service', label: 'Serviço' },
-                    { key: 'barber', label: 'Barbeiro' },
+                    ...(currentUser?.role === 'admin' ? [{ key: 'barber', label: 'Barbeiro' }] : []),
                     { key: 'name', label: 'Cliente' },
                     { key: 'phone', label: 'Telefone' },
                     { key: 'status', label: 'Estado' },
@@ -454,7 +547,7 @@ export default function AdminPage() {
               <tbody className="divide-y divide-noir-200 dark:divide-noir-800">
                 {filteredBookings.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-12 text-center">
+                    <td colSpan={currentUser?.role === 'admin' ? 8 : 7} className="px-4 py-12 text-center">
                       <div className="flex flex-col items-center gap-3 text-noir-400">
                         <Calendar className="w-12 h-12 opacity-30" />
                         <p className="font-medium">Nenhuma reserva encontrada</p>
@@ -479,12 +572,14 @@ export default function AdminPage() {
                       <td className="px-4 py-4">
                         <span className="badge-gold">{booking.service}</span>
                       </td>
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-2">
-                          <Crown className="w-4 h-4 text-gold-500" />
-                          <span className="font-medium text-noir-950 dark:text-white">{booking.barber}</span>
-                        </div>
-                      </td>
+                      {currentUser?.role === 'admin' && (
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-2">
+                            <Crown className="w-4 h-4 text-gold-500" />
+                            <span className="font-medium text-noir-950 dark:text-white">{booking.barber}</span>
+                          </div>
+                        </td>
+                      )}
                       <td className="px-4 py-4">
                         <div>
                           <div className="font-medium text-noir-950 dark:text-white">{booking.name}</div>
@@ -521,14 +616,16 @@ export default function AdminPage() {
                               ? <ChevronLeft className="w-4 h-4" />
                               : <CheckCircle className="w-4 h-4 fill-current" />}
                           </button>
-                          <button
-                            onClick={() => handleDelete(booking.id)}
-                            className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
-                            aria-label="Eliminar reserva"
-                            title="Eliminar reserva"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {(currentUser?.role === 'admin') && (
+                            <button
+                              onClick={() => handleDelete(booking.id)}
+                              className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                              aria-label="Eliminar reserva"
+                              title="Eliminar reserva"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -541,7 +638,7 @@ export default function AdminPage() {
           {/* Pagination / Info */}
           <div className="px-4 py-4 border-t border-noir-200 dark:border-noir-800 flex items-center justify-between">
             <p className="text-sm text-noir-500">
-              A mostrar <strong>{filteredBookings.length}</strong> de <strong>{bookings.length}</strong> reservas
+              A mostrar <strong>{filteredBookings.length}</strong> de <strong>{userBookings.length}</strong> reservas
             </p>
             <button
               onClick={exportCSV}
@@ -553,7 +650,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Empty State for Mobile Card View */}
+        {/* Mobile Card View */}
         <div className="sm:hidden mt-4 space-y-3">
           {filteredBookings.map((booking) => (
             <div key={booking.id} className="card-luxury p-4">
@@ -586,13 +683,15 @@ export default function AdminPage() {
                   <span className="text-xs text-noir-400 block mb-1">Serviço</span>
                   <span className="font-medium text-noir-950 dark:text-white">{booking.service}</span>
                 </div>
-                <div>
-                  <span className="text-xs text-noir-400 block mb-1">Barbeiro</span>
-                  <div className="flex items-center gap-1 font-medium text-noir-950 dark:text-white">
-                    <Crown className="w-4 h-4 text-gold-500" />
-                    {booking.barber}
+                {currentUser?.role === 'admin' && (
+                  <div>
+                    <span className="text-xs text-noir-400 block mb-1">Barbeiro</span>
+                    <div className="flex items-center gap-1 font-medium text-noir-950 dark:text-white">
+                      <Crown className="w-4 h-4 text-gold-500" />
+                      {booking.barber}
+                    </div>
                   </div>
-                </div>
+                )}
                 <div>
                   <span className="text-xs text-noir-400 block mb-1">Cliente</span>
                   <span className="font-medium text-noir-950 dark:text-white">{booking.name}</span>
@@ -626,13 +725,15 @@ export default function AdminPage() {
                       </>
                   }
                 </button>
-                <button
-                  onClick={() => handleDelete(booking.id)}
-                  className="btn-tertiary flex-1 gap-1 text-sm py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Eliminar
-                </button>
+                {(currentUser?.role === 'admin') && (
+                  <button
+                    onClick={() => handleDelete(booking.id)}
+                    className="btn-tertiary flex-1 gap-1 text-sm py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Eliminar
+                  </button>
+                )}
               </div>
             </div>
           ))}
