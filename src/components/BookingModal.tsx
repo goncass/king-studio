@@ -155,7 +155,7 @@ export function BookingModal({ isOpen, onClose, preSelectedService }: BookingMod
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-noir-1000/50 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="booking-title">
-      <div className="w-full max-w-md bg-white dark:bg-noir-1000 rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto animate-slide-down border border-noir-200 dark:border-noir-800">
+      <div className="w-full max-w-xl bg-white dark:bg-noir-1000 rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto animate-slide-down border border-noir-200 dark:border-noir-800">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-noir-200 dark:border-noir-800 sticky top-0 bg-white/95 dark:bg-noir-1000/95 backdrop-blur-sm z-10 rounded-t-2xl">
           <h2 id="booking-title" className="font-display text-2xl font-bold text-noir-950 dark:text-white">
@@ -238,7 +238,7 @@ export function BookingModal({ isOpen, onClose, preSelectedService }: BookingMod
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
-                            <h4 className="font-semibold text-noir-950 dark:text-white truncate pr-2">
+                            <h4 className="font-semibold text-noir-950 dark:text-white pr-2 leading-tight">
                               {service.name}
                             </h4>
                             {service.popular && (
