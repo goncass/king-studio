@@ -84,7 +84,7 @@ const STATUS_COLORS: Record<Booking['status'], string> = {
   cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
 }
 
-const BARBERS = ['King', 'Ricardo', 'Miguel']
+const BARBERS = ['Nuno', 'Ruben', 'Bruno', 'Vitor']
 
 export default function AdminPage() {
   const router = useRouter()
