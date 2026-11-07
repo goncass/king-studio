@@ -309,9 +309,10 @@ export default function AdminPage() {
         name: userForm.name.trim(),
         role: userForm.role,
         ...(userForm.password ? { password: userForm.password } : {}),
+        ...(editingUser ? { id: editingUser.id } : {}),
       }
 
-      const url = editingUser ? `/api/admin/users?id=${editingUser.id}` : '/api/admin/users'
+      const url = '/api/admin/users'
       const method = editingUser ? 'PUT' : 'POST'
 
       const response = await fetch(url, {
