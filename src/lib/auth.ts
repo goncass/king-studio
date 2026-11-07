@@ -37,6 +37,11 @@ const COOKIE_OPTIONS = {
 // Rate limiting store (in production, use Redis)
 const loginAttempts = new Map<string, { count: number; resetAt: number }>()
 
+// More permissive in development
+const isDev = process.env.NODE_ENV !== 'production'
+const RATE_LIMIT_WINDOW_MS = isDev ? 5 * 60 * 1000 : 15 * 60 * 1000 // 5 min dev, 15 min prod
+const RATE_LIMIT_MAX_ATTEMPTS = isDev ? 20 : 5 // 20 attempts dev, 5 prod
+
 export function getClientIp(request: Request): string {
   const forwarded = request.headers.get('x-forwarded-for')
   if (forwarded) return forwarded.split(',')[0].trim()
@@ -45,8 +50,8 @@ export function getClientIp(request: Request): string {
 
 export function checkRateLimit(ip: string): { allowed: boolean; remaining: number; resetAt: number } {
   const now = Date.now()
-  const windowMs = 15 * 60 * 1000 // 15 minutes
-  const maxAttempts = 5
+  const windowMs = RATE_LIMIT_WINDOW_MS
+  const maxAttempts = RATE_LIMIT_MAX_ATTEMPTS
 
   const record = loginAttempts.get(ip)
   if (!record || now > record.resetAt) {
@@ -60,6 +65,15 @@ export function checkRateLimit(ip: string): { allowed: boolean; remaining: numbe
 
   record.count++
   return { allowed: true, remaining: maxAttempts - record.count, resetAt: record.resetAt }
+}
+
+// Helper to clear rate limit (for testing)
+export function clearRateLimit(ip?: string) {
+  if (ip) {
+    loginAttempts.delete(ip)
+  } else {
+    loginAttempts.clear()
+  }
 }
 
 export async function hashPassword(password: string): Promise<string> {
