@@ -28,6 +28,7 @@ import {
   Sparkles,
   UserCheck,
   Shield,
+  LogOut,
 } from 'lucide-react'
 import { format, parseISO, startOfDay, endOfDay, isWithinInterval, subDays } from 'date-fns'
 import { pt } from 'date-fns/locale'
@@ -46,12 +47,11 @@ interface Booking {
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled'
 }
 
-interface BarberUser {
+interface User {
+  id: string
   username: string
-  password: string
   name: string
   role: 'admin' | 'barber'
-  avatar?: string
 }
 
 const STATUS_LABELS: Record<Booking['status'], string> = {
@@ -69,14 +69,6 @@ const STATUS_COLORS: Record<Booking['status'], string> = {
 }
 
 const BARBERS = ['King', 'Ricardo', 'Miguel']
-
-// Barber user accounts - in production, store in database/env vars
-const BARBER_USERS: BarberUser[] = [
-  { username: 'king', password: 'king2020', name: 'King', role: 'admin' },
-  { username: 'ricardo', password: 'ricardo2020', name: 'Ricardo', role: 'barber' },
-  { username: 'miguel', password: 'miguel2020', name: 'Miguel', role: 'barber' },
-  { username: 'admin', password: 'kings2020', name: 'Admin', role: 'admin' },
-]
 
 // Demo data - in production this would come from a database
 const DEMO_BOOKINGS: Booking[] = [
@@ -149,12 +141,8 @@ const DEMO_BOOKINGS: Booking[] = [
 
 export default function AdminPage() {
   const router = useRouter()
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
-  const [currentUser, setCurrentUser] = useState<BarberUser | null>(null)
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [bookings, setBookings] = useState<Booking[]>(DEMO_BOOKINGS)
   const [filterDate, setFilterDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'))
   const [filterBarber, setFilterBarber] = useState<string>('all')
@@ -162,23 +150,37 @@ export default function AdminPage() {
   const [sortConfig, setSortConfig] = useState<{ key: keyof Booking; direction: 'asc' | 'desc' }>({ key: 'date', direction: 'asc' })
   const [stats, setStats] = useState({ today: 0, week: 0, pending: 0, completed: 0 })
 
-  // Check if already authenticated (sessionStorage)
+  // Fetch current user session
   useEffect(() => {
-    const auth = sessionStorage.getItem('kingsstudio_admin_auth')
-    const userData = sessionStorage.getItem('kingsstudio_admin_user')
-    if (auth === 'true' && userData) {
-      setIsAuthenticated(true)
-      setCurrentUser(JSON.parse(userData))
+    async function fetchUser() {
+      try {
+        const response = await fetch('/api/auth/me')
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user)
+        } else {
+          // Not authenticated - middleware will redirect
+          router.push('/admin/login')
+        }
+      } catch (error) {
+        console.error('Auth error:', error)
+        router.push('/admin/login')
+      } finally {
+        setIsLoading(false)
+      }
     }
-  }, [])
+    fetchUser()
+  }, [router])
 
   // Calculate stats based on user role
   useEffect(() => {
+    if (!user) return
+
     let userBookings = bookings
 
     // Barbers only see their own bookings
-    if (currentUser?.role === 'barber') {
-      userBookings = bookings.filter(b => b.barber === currentUser.name)
+    if (user.role === 'barber') {
+      userBookings = bookings.filter(b => b.barber === user.name)
     }
 
     const today = startOfDay(new Date())
@@ -191,31 +193,16 @@ export default function AdminPage() {
     const completedCount = userBookings.filter(b => b.status === 'completed').length
 
     setStats({ today: todayCount, week: weekCount, pending: pendingCount, completed: completedCount })
-  }, [bookings, currentUser])
+  }, [bookings, user])
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault()
-    const user = BARBER_USERS.find(u => u.username === username && u.password === password)
-
-    if (user) {
-      setIsAuthenticated(true)
-      setCurrentUser(user)
-      sessionStorage.setItem('kingsstudio_admin_auth', 'true')
-      sessionStorage.setItem('kingsstudio_admin_user', JSON.stringify(user))
-      setError('')
-      setPassword('')
-    } else {
-      setError('Utilizador ou senha incorretos. Tente novamente.')
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+      router.push('/admin/login')
+      router.refresh()
+    } catch (error) {
+      console.error('Logout error:', error)
     }
-  }
-
-  const handleLogout = () => {
-    setIsAuthenticated(false)
-    setCurrentUser(null)
-    setUsername('')
-    setPassword('')
-    sessionStorage.removeItem('kingsstudio_admin_auth')
-    sessionStorage.removeItem('kingsstudio_admin_user')
   }
 
   const handleStatusChange = (id: string, newStatus: Booking['status']) => {
@@ -236,8 +223,8 @@ export default function AdminPage() {
   }
 
   // Filter bookings based on user role
-  const userBookings = currentUser?.role === 'barber'
-    ? bookings.filter(b => b.barber === currentUser.name)
+  const userBookings = user?.role === 'barber'
+    ? bookings.filter(b => b.barber === user.name)
     : bookings
 
   const filteredBookings = userBookings
@@ -266,116 +253,24 @@ export default function AdminPage() {
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const link = document.createElement('a')
     link.href = URL.createObjectURL(blob)
-    link.download = `kingsstudio-reservas-${currentUser?.name || 'all'}-${format(new Date(), 'yyyy-MM-dd')}.csv`
+    link.download = `kingsstudio-reservas-${user?.name || 'all'}-${format(new Date(), 'yyyy-MM-dd')}.csv`
     link.click()
   }
 
-  if (!isAuthenticated) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-noir-1000 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          {/* Logo */}
-          <div className="text-center mb-8">
-            <Link href="/" className="inline-flex items-center gap-2 text-2xl font-display font-bold text-white mb-4">
-              <Scissors className="w-8 h-8 text-gold-500" />
-              <span>KingsStudio <span className="text-gold-400">2020</span></span>
-            </Link>
-            <Crown className="w-16 h-16 text-gold-500 mx-auto mb-4 opacity-50" />
-            <h1 className="font-display text-3xl font-bold text-white mb-2">Painel Admin</h1>
-            <p className="text-gold-400">Gestão de Reservas</p>
-          </div>
-
-          {/* Login Form */}
-          <form onSubmit={handleLogin} className="card-luxury p-8 space-y-6">
-            <div>
-              <label htmlFor="username" className="label-field flex items-center gap-2">
-                <User className="w-5 h-5 text-gold-500" aria-hidden="true" />
-                Utilizador
-              </label>
-              <input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="input-field"
-                placeholder="ex: king, ricardo, miguel"
-                autoComplete="username"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="label-field flex items-center gap-2">
-                <Lock className="w-5 h-5 text-gold-500" aria-hidden="true" />
-                Senha
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="input-field pr-12"
-                  placeholder="Digite a senha"
-                  autoComplete="current-password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-noir-400 hover:text-gold-500 transition-colors"
-                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            {error && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center gap-2" role="alert">
-                <XCircle className="w-4 h-4" />
-                {error}
-              </div>
-            )}
-
-            <button type="submit" className="btn-primary w-full py-3 text-lg">
-              <UserCheck className="w-5 h-5 mr-2" />
-              Entrar no Painel
-            </button>
-
-            <div className="text-center pt-4 border-t border-noir-800 space-y-3">
-              <p className="text-noir-400 text-sm">
-                Credenciais de teste:
-              </p>
-              <div className="text-left space-y-1 text-xs font-mono bg-noir-800 p-3 rounded-lg">
-                <div className="flex justify-between text-gold-400">
-                  <span><strong>Admin:</strong> admin / kings2020</span>
-                  <Shield className="w-3.5 h-3.5 text-gold-500" />
-                </div>
-                <div className="flex justify-between text-gold-400">
-                  <span><strong>King:</strong> king / king2020</span>
-                  <Crown className="w-3.5 h-3.5 text-gold-500" />
-                </div>
-                <div className="flex justify-between text-gold-400">
-                  <span><strong>Ricardo:</strong> ricardo / ricardo2020</span>
-                </div>
-                <div className="flex justify-between text-gold-400">
-                  <span><strong>Miguel:</strong> miguel / miguel2020</span>
-                </div>
-              </div>
-              <Link href="/" className="text-gold-400 hover:text-gold-300 text-sm flex items-center justify-center gap-1 mt-2">
-                <Sparkles className="w-4 h-4" />
-                Voltar ao site
-              </Link>
-            </div>
-          </form>
+      <div className="min-h-screen bg-noir-50 dark:bg-noir-1000 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-gold-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-gold-400">A carregar...</p>
         </div>
       </div>
     )
   }
 
-  // Determine which barbers to show in filter based on role
-  const availableBarbers = currentUser?.role === 'admin' ? BARBERS : (currentUser ? [currentUser.name] : [])
+  if (!user) {
+    return null // Middleware handles redirect
+  }
 
   return (
     <div className="min-h-screen bg-noir-50 dark:bg-noir-1000">
@@ -391,13 +286,13 @@ export default function AdminPage() {
               <span className="hidden sm:block px-3 py-1 bg-gold-500/10 text-gold-400 text-xs font-medium rounded-full border border-gold-500/20">
                 PAINEL ADMIN
               </span>
-              {currentUser?.role === 'barber' && (
+              {user.role === 'barber' && (
                 <span className="px-3 py-1 bg-blue-500/10 text-blue-400 text-xs font-medium rounded-full border border-blue-500/20 flex items-center gap-1">
                   <User className="w-3 h-3" />
-                  {currentUser.name}
+                  {user.name}
                 </span>
               )}
-              {currentUser?.role === 'admin' && (
+              {user.role === 'admin' && (
                 <span className="px-3 py-1 bg-purple-500/10 text-purple-400 text-xs font-medium rounded-full border border-purple-500/20 flex items-center gap-1">
                   <Shield className="w-3 h-3" />
                   Admin
@@ -417,7 +312,7 @@ export default function AdminPage() {
                 onClick={handleLogout}
                 className="btn-tertiary gap-2 text-sm"
               >
-                <Unlock className="w-4 h-4" />
+                <LogOut className="w-4 h-4" />
                 Sair
               </button>
             </div>
@@ -440,7 +335,7 @@ export default function AdminPage() {
               </div>
 
               {/* Barber Filter - only for admin */}
-              {currentUser?.role === 'admin' && (
+              {user.role === 'admin' && (
                 <select
                   value={filterBarber}
                   onChange={(e) => setFilterBarber(e.target.value)}
@@ -520,7 +415,7 @@ export default function AdminPage() {
                     { key: 'date', label: 'Data' },
                     { key: 'time', label: 'Hora' },
                     { key: 'service', label: 'Serviço' },
-                    ...(currentUser?.role === 'admin' ? [{ key: 'barber', label: 'Barbeiro' }] : []),
+                    ...(user.role === 'admin' ? [{ key: 'barber', label: 'Barbeiro' }] : []),
                     { key: 'name', label: 'Cliente' },
                     { key: 'phone', label: 'Telefone' },
                     { key: 'status', label: 'Estado' },
@@ -547,7 +442,7 @@ export default function AdminPage() {
               <tbody className="divide-y divide-noir-200 dark:divide-noir-800">
                 {filteredBookings.length === 0 ? (
                   <tr>
-                    <td colSpan={currentUser?.role === 'admin' ? 8 : 7} className="px-4 py-12 text-center">
+                    <td colSpan={user.role === 'admin' ? 8 : 7} className="px-4 py-12 text-center">
                       <div className="flex flex-col items-center gap-3 text-noir-400">
                         <Calendar className="w-12 h-12 opacity-30" />
                         <p className="font-medium">Nenhuma reserva encontrada</p>
@@ -572,7 +467,7 @@ export default function AdminPage() {
                       <td className="px-4 py-4">
                         <span className="badge-gold">{booking.service}</span>
                       </td>
-                      {currentUser?.role === 'admin' && (
+                      {user.role === 'admin' && (
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-2">
                             <Crown className="w-4 h-4 text-gold-500" />
@@ -616,7 +511,7 @@ export default function AdminPage() {
                               ? <ChevronLeft className="w-4 h-4" />
                               : <CheckCircle className="w-4 h-4 fill-current" />}
                           </button>
-                          {(currentUser?.role === 'admin') && (
+                          {(user.role === 'admin') && (
                             <button
                               onClick={() => handleDelete(booking.id)}
                               className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
@@ -683,7 +578,7 @@ export default function AdminPage() {
                   <span className="text-xs text-noir-400 block mb-1">Serviço</span>
                   <span className="font-medium text-noir-950 dark:text-white">{booking.service}</span>
                 </div>
-                {currentUser?.role === 'admin' && (
+                {user.role === 'admin' && (
                   <div>
                     <span className="text-xs text-noir-400 block mb-1">Barbeiro</span>
                     <div className="flex items-center gap-1 font-medium text-noir-950 dark:text-white">
@@ -725,7 +620,7 @@ export default function AdminPage() {
                       </>
                   }
                 </button>
-                {(currentUser?.role === 'admin') && (
+                {(user.role === 'admin') && (
                   <button
                     onClick={() => handleDelete(booking.id)}
                     className="btn-tertiary flex-1 gap-1 text-sm py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
