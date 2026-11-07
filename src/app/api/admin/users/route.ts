@@ -35,10 +35,10 @@ let USERS = [
   },
   {
     id: '5',
-    username: 'Nuno',
-    name: 'Nuno',
+    username: 'Nu',
+    name: 'Vitor',
     role: 'barber' as const,
-    passwordHash: '$2a$12$0M3r/c2fWTZCo9SkVTSwbwRlyFWSpDPXE9SBNLrLrs3S7BsLs7s8A', // 
+    passwordHash: '$2a$12$0M3r/c2fWTZCo9SkVTSwbwRlyFWSpDPXE9SBNLrLrs3S7BsLs7s8A', // miguel2020
   },
 ]
 

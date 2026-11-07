@@ -7,10 +7,16 @@ const JWT_SECRET = new TextEncoder().encode(
 )
 
 const PROTECTED_PATHS = ['/admin']
+const PUBLIC_PATHS = ['/admin/login'] // Exclude login from protection
 const AUTH_COOKIE_NAME = 'kingsstudio_auth'
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  // Allow public paths (login page)
+  if (PUBLIC_PATHS.some(path => pathname.startsWith(path))) {
+    return NextResponse.next()
+  }
 
   // Check if path is protected
   const isProtected = PROTECTED_PATHS.some(path => pathname.startsWith(path))
