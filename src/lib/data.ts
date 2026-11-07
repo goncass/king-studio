@@ -60,7 +60,7 @@ export const services: Service[] = [
     name: 'Corte de Barba + Cabelo',
     description: 'Combo completo: corte de cabelo + barba completa com toalha quente.',
     price: '17€',
-    duration: '45 min',
+    duration: '60 min',
     category: 'Combos',
     icon: 'scissors',
   },

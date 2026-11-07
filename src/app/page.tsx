@@ -120,7 +120,7 @@ export default function HomePage() {
           <div className="container-custom">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               <div className="relative">
-                <div className="font-display text-4xl sm:text-5xl font-bold text-gold-500 mb-2">4.9</div>
+                <div className="font-display text-4xl sm:text-5xl font-bold text-gold-500 mb-2">4.9★</div>
                 <div className="text-noir-600 dark:text-noir-400">Avaliação Google</div>
                 <div className="absolute top-0 right-1/4 w-2 h-2 rounded-full bg-gold-500" aria-hidden="true" />
               </div>
@@ -151,7 +151,7 @@ export default function HomePage() {
                 Tudo para o seu <span className="text-gold-gradient">estilo</span>
               </h2>
               <p className="text-lg text-noir-600 dark:text-noir-400">
-                Desde cortes clássicos aos mais modernos, barba, coloração e tratamentos capilares.
+                Desde cortes clássicos aos mais modernos e barba.
               </p>
             </div>
 

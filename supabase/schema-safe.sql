@@ -179,13 +179,13 @@ insert into users (username, name, role, password_hash) values
   ('nuno', 'Nuno', 'barber', '$2b$12$mKL466CqjL4I5BcTk7vkae5aEjzVpJMPi0ryRyTixKd.c1uGo9Lbi')
 on conflict (username) do nothing;
 
--- Demo bookings (updated barber names)
+-- Demo bookings (updated barber names & services)
 insert into bookings (id, service_id, barber_name, date, time, duration_minutes, client_name, client_phone, client_email, notes, status) values
   ('KS-1704067200001', 'corte-barba', 'Nuno', '2024-12-15', '10:00', 60, 'João Silva', '915 271 491', 'joao@email.com', 'Prefere fade baixo', 'confirmed'),
-  ('KS-1704067200002', 'fade-cut', 'Ruben', '2024-12-15', '11:30', 45, 'Miguel Santos', '912 345 678', '', '', 'pending'),
-  ('KS-1704067200003', 'navalha-quente', 'Nuno', '2024-12-14', '14:30', 35, 'Pedro Costa', '918 765 432', 'pedro@email.com', 'Pele sensível', 'completed'),
-  ('KS-1704067200004', 'corte-crianca', 'Bruno', '2024-12-16', '11:00', 30, 'André Ferreira', '913 456 789', '', 'Primeiro corte do filho (8 anos)', 'confirmed'),
-  ('KS-1704067200005', 'colocacao-cor', 'Vitor', '2024-12-16', '15:30', 90, 'Rui Martins', '917 890 123', 'rui@email.com', 'Cobrir brancos - tom natural', 'pending')
+  ('KS-1704067200002', 'corte-cabelo', 'Ruben', '2024-12-15', '11:30', 30, 'Miguel Santos', '912 345 678', '', '', 'pending'),
+  ('KS-1704067200003', 'barba-completa', 'Nuno', '2024-12-14', '14:30', 20, 'Pedro Costa', '918 765 432', 'pedro@email.com', 'Pele sensível', 'completed'),
+  ('KS-1704067200004', 'corte-cabelo', 'Bruno', '2024-12-16', '11:00', 30, 'André Ferreira', '913 456 789', '', 'Primeiro corte do filho (8 anos)', 'confirmed'),
+  ('KS-1704067200005', 'corte-barba', 'Vitor', '2024-12-16', '15:30', 60, 'Rui Martins', '917 890 123', 'rui@email.com', 'Cobrir brancos - tom natural', 'pending')
 on conflict (id) do nothing;
 
 -- ============================================

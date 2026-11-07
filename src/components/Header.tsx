@@ -45,7 +45,11 @@ export function Header({ isMobileMenuOpen, setIsMobileMenuOpen, onBookClick }: H
             className="flex items-center gap-2 text-xl font-display font-bold text-noir-950 dark:text-white hover:opacity-80 transition-opacity"
             aria-label="KingsStudio 2020 - Página inicial"
           >
-            <Scissors className="w-7 h-7 text-gold-500" aria-hidden="true" />
+            <img
+              src="https://lh3.googleusercontent.com/gps-cs-s/ANWiy9SoXDzaDWPTm2FHzjuWHjTAJtl6MqlfrCmJQs-43vyUJQiQDV2fYrfkavlnUqp_jbYkDSUVNH8r-xphumNzBr2CU6Y1Soafu8UVw3e0EKILM6WFZNBQstCSe3qAUIKAMqP-Ig8H=s680-w680-h510-rw"
+              alt="KingsStudio 2020"
+              className="w-8 h-8 rounded-lg object-cover"
+            />
             <span>KingsStudio <span className="text-gold-500">2020</span></span>
           </Link>
 
