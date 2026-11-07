@@ -1,37 +1,13 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { X, Calendar, Clock, User, Phone, Mail, Scissors, CheckCircle, AlertCircle, Loader2, ChevronRight, ChevronLeft, Crown, Sparkles } from 'lucide-react'
+import { X, Calendar, Clock, User, Phone, Mail, Scissors, CheckCircle, AlertCircle, Loader2, ChevronRight, ChevronLeft, Crown } from 'lucide-react'
 import { services, barbers } from '@/lib/data'
-import { format, parseISO, isBefore, startOfDay, addMinutes } from 'date-fns'
+import { format, parseISO, startOfDay } from 'date-fns'
 import { pt } from 'date-fns/locale'
-
-// Parse duration string to minutes (e.g., '60 min' → 60, '30-45 min' → 45)
-function parseDuration(duration: string): number {
-  const match = duration.match(/(\d+)(?:-(\d+))?\s*min/i)
-  if (!match) return 30
-  const min = parseInt(match[1])
-  const max = match[2] ? parseInt(match[2]) : min
-  return max
-}
-
-// Get all 30-min slots that a service occupies starting from a given time
-function getOccupiedSlots(startTime: string, durationMinutes: number): string[] {
-  const [hours, minutes] = startTime.split(':').map(Number)
-  const start = hours * 60 + minutes
-  const end = start + durationMinutes
-  const slots: string[] = []
-
-  for (let t = start; t < end; t += 30) {
-    const h = Math.floor(t / 60).toString().padStart(2, '0')
-    const m = (t % 60).toString().padStart(2, '0')
-    slots.push(`${h}:${m}`)
-  }
-  return slots
-}
 
 const bookingSchema = z.object({
   service: z.string().min(1, 'Selecione um serviço'),
@@ -99,33 +75,29 @@ export function BookingModal({ isOpen, onClose, preSelectedService }: BookingMod
 
   const allTimeSlots = generateTimeSlots()
 
-  // Simulate fetching available slots (in real app, this would be an API call)
+  // Fetch available slots from API
   useEffect(() => {
     if (selectedService && selectedBarber && selectedDate) {
-      const serviceData = services.find((s) => s.id === selectedService)
-      const duration = serviceData ? parseDuration(serviceData.duration) : 30
-
-      // Simulate some existing bookings (in real app, fetch from API)
-      const existingBookings = [
-        { time: '10:00', duration: 60 }, // Corte + Barba = 60 min → blocks 10:00, 10:30
-        { time: '11:30', duration: 45 }, // Fade Cut = 45 min → blocks 11:30, 12:00
-        { time: '14:30', duration: 35 }, // Navalha Quente = 35 min → blocks 14:30, 15:00
-        { time: '16:00', duration: 30 }, // Barba Completa = 30 min → blocks 16:00
-      ]
-
-      // Build set of all occupied slots
-      const occupiedSlots = new Set<string>()
-      existingBookings.forEach((booking) => {
-        getOccupiedSlots(booking.time, booking.duration).forEach((s) => occupiedSlots.add(s))
-      })
-
-      // Filter available slots - a slot is available only if IT and all subsequent slots for the duration are free
-      const available = allTimeSlots.filter((slot) => {
-        const neededSlots = getOccupiedSlots(slot, duration)
-        return neededSlots.every((s) => !occupiedSlots.has(s))
-      })
-
-      setAvailableSlots(available)
+      const fetchSlots = async () => {
+        try {
+          const params = new URLSearchParams({
+            service: selectedService,
+            barber: selectedBarber,
+            date: selectedDate,
+          })
+          const response = await fetch(`/api/bookings/slots?${params.toString()}`)
+          if (response.ok) {
+            const data = await response.json()
+            setAvailableSlots(data.availableSlots || [])
+          } else {
+            setAvailableSlots([])
+          }
+        } catch (error) {
+          console.error('Failed to fetch slots:', error)
+          setAvailableSlots([])
+        }
+      }
+      fetchSlots()
     } else {
       setAvailableSlots([])
     }
