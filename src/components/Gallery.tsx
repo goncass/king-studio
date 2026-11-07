@@ -59,7 +59,7 @@ export function Gallery({ images }: GalleryProps) {
     const image = images[selectedIndex]
     return (
       <div
-        className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
+        className="fixed inset-0 z-50 bg-noir-1000/95 flex items-center justify-center p-4"
         role="dialog"
         aria-modal="true"
         aria-label={`Imagem ${selectedIndex + 1} de ${images.length}: ${image.alt}`}
@@ -112,7 +112,7 @@ export function Gallery({ images }: GalleryProps) {
       {images.map((image, index) => (
         <article
           key={image.id}
-          className="group relative aspect-[4/3] rounded-xl overflow-hidden cursor-zoom-in card"
+          className="group relative aspect-[4/3] rounded-xl overflow-hidden cursor-zoom-in card-luxury"
           role="listitem"
           onClick={() => openLightbox(index)}
           onKeyDown={(e) => {
@@ -131,7 +131,7 @@ export function Gallery({ images }: GalleryProps) {
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-dark-950/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+          <div className="absolute inset-0 bg-gradient-to-t from-noir-1000/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
             <div className="w-full flex items-center justify-between text-white">
               <div>
                 <p className="font-medium text-sm">{image.category}</p>
@@ -147,4 +147,3 @@ export function Gallery({ images }: GalleryProps) {
     </div>
   )
 }
-

@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { Review } from '@/lib/data'
-import { Star, Quote, Calendar } from 'lucide-react'
+import { Star, Quote, Calendar, Crown } from 'lucide-react'
 
 interface ReviewCardProps {
   review: Review
@@ -20,14 +20,10 @@ export function ReviewCard({ review }: ReviewCardProps) {
 
   const getRandomColor = (str: string) => {
     const colors = [
-      'bg-primary-500',
-      'bg-blue-500',
-      'bg-green-500',
-      'bg-purple-500',
+      'bg-gold-500',
+      'bg-amber-500',
+      'bg-yellow-500',
       'bg-orange-500',
-      'bg-pink-500',
-      'bg-teal-500',
-      'bg-indigo-500',
     ]
     let hash = 0
     for (let i = 0; i < str.length; i++) {
@@ -37,9 +33,9 @@ export function ReviewCard({ review }: ReviewCardProps) {
   }
 
   return (
-    <article className="card p-6 relative">
+    <article className="card-luxury p-6 relative">
       {/* Quote icon */}
-      <Quote className="absolute top-6 right-6 w-10 h-10 text-primary-500/10 dark:text-primary-500/5" aria-hidden="true" />
+      <Quote className="absolute top-6 right-6 w-10 h-10 text-gold-500/10 dark:text-gold-500/5" aria-hidden="true" />
 
       {/* Header */}
       <div className="flex items-center gap-4 mb-4 relative z-10">
@@ -61,22 +57,22 @@ export function ReviewCard({ review }: ReviewCardProps) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h4 className="font-semibold text-dark-900 dark:text-white truncate">
+            <h4 className="font-semibold text-noir-950 dark:text-white truncate">
               {review.author}
             </h4>
             {review.service && (
-              <span className="px-2 py-0.5 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 text-xs font-medium whitespace-nowrap flex-shrink-0">
+              <span className="px-2 py-0.5 rounded-full bg-gold-100 text-gold-800 dark:bg-gold-900/30 dark:text-gold-300 text-xs font-medium whitespace-nowrap flex-shrink-0 badge-gold">
                 {review.service}
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 text-sm text-dark-500 dark:text-dark-400">
+          <div className="flex items-center gap-2 text-sm text-noir-500 dark:text-noir-400">
             <div className="flex items-center gap-0.5" aria-label={`${review.rating} de 5 estrelas`}>
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
                   className={`w-4 h-4 ${
-                    i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-dark-300 dark:text-dark-600'
+                    i < review.rating ? 'fill-gold-400 text-gold-400' : 'text-noir-300 dark:text-noir-600'
                   }`}
                   aria-hidden="true"
                 />
@@ -91,7 +87,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
       </div>
 
       {/* Review text */}
-      <p className="text-dark-700 dark:text-dark-300 leading-relaxed relative z-10">
+      <p className="text-noir-700 dark:text-noir-300 leading-relaxed relative z-10">
         &ldquo;{review.text}&rdquo;
       </p>
     </article>

@@ -9,20 +9,22 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: '#fdf8f3',
-          100: '#faece4',
-          200: '#f4d6c1',
-          300: '#eab98f',
-          400: '#e0935a',
-          500: '#d67433',
-          600: '#c55e25',
-          700: '#a1471f',
-          800: '#823a1f',
-          900: '#6a311e',
-          950: '#39150d',
+        // Luxury Gold/Champagne palette
+        gold: {
+          50: '#fdfcf7',
+          100: '#faf7eb',
+          200: '#f3edd5',
+          300: '#ebe0b8',
+          400: '#e0ce8f',
+          500: '#d4ba6b',      // Main gold
+          600: '#c4a352',      // Hover
+          700: '#a68440',      // Active
+          800: '#8a6b36',
+          900: '#735730',
+          950: '#3d2d16',
         },
-        dark: {
+        // Deep charcoal/black for luxury feel
+        noir: {
           50: '#fafafa',
           100: '#f4f4f5',
           200: '#e4e4e7',
@@ -34,6 +36,21 @@ const config: Config = {
           800: '#27272a',
           900: '#18181b',
           950: '#09090b',
+          1000: '#030303',     // Pure black
+        },
+        // Keep 'primary' pointing to gold for backward compat
+        primary: {
+          50: '#fdfcf7',
+          100: '#faf7eb',
+          200: '#f3edd5',
+          300: '#ebe0b8',
+          400: '#e0ce8f',
+          500: '#d4ba6b',
+          600: '#c4a352',
+          700: '#a68440',
+          800: '#8a6b36',
+          900: '#735730',
+          950: '#3d2d16',
         },
       },
       fontFamily: {
@@ -44,6 +61,7 @@ const config: Config = {
         'fade-in': 'fadeIn 0.5s ease-out',
         'slide-up': 'slideUp 0.5s ease-out',
         'slide-down': 'slideDown 0.3s ease-out',
+        'shimmer': 'shimmer 2s infinite',
       },
       keyframes: {
         fadeIn: {
@@ -58,6 +76,14 @@ const config: Config = {
           '0%': { opacity: '0', transform: 'translateY(-10px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+      },
+      backgroundImage: {
+        'gold-gradient': 'linear-gradient(135deg, #d4ba6b 0%, #f3edd5 50%, #d4ba6b 100%)',
+        'noir-gradient': 'linear-gradient(180deg, #09090b 0%, #18181b 50%, #030303 100%)',
       },
     },
   },

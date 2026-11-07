@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { Menu, X, Scissors, ChevronDown } from 'lucide-react'
+import { Menu, X, Scissors, Crown } from 'lucide-react'
 
 interface HeaderProps {
   isMobileMenuOpen: boolean
@@ -33,7 +33,7 @@ export function Header({ isMobileMenuOpen, setIsMobileMenuOpen, onBookClick }: H
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? 'bg-white/95 dark:bg-dark-950/95 backdrop-blur-sm shadow-sm border-b border-dark-200 dark:border-dark-800'
+          ? 'bg-white/95 dark:bg-noir-1000/95 backdrop-blur-sm shadow-sm border-b border-noir-200 dark:border-noir-800'
           : 'bg-transparent'
       }`}
     >
@@ -42,11 +42,11 @@ export function Header({ isMobileMenuOpen, setIsMobileMenuOpen, onBookClick }: H
           {/* Logo */}
           <Link
             href="#"
-            className="flex items-center gap-2 text-xl font-display font-bold text-dark-900 dark:text-white hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 text-xl font-display font-bold text-noir-950 dark:text-white hover:opacity-80 transition-opacity"
             aria-label="KingsStudio 2020 - Página inicial"
           >
-            <Scissors className="w-7 h-7 text-primary-500" aria-hidden="true" />
-            <span>KingsStudio <span className="text-primary-500">2020</span></span>
+            <Scissors className="w-7 h-7 text-gold-500" aria-hidden="true" />
+            <span>KingsStudio <span className="text-gold-500">2020</span></span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -55,7 +55,7 @@ export function Header({ isMobileMenuOpen, setIsMobileMenuOpen, onBookClick }: H
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium text-dark-700 dark:text-dark-300 hover:text-primary-500 dark:hover:text-primary-400 transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-primary-500 after:transition-all hover:after:w-full"
+                className="text-sm font-medium text-noir-700 dark:text-noir-300 hover:text-gold-600 dark:hover:text-gold-400 transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-gold-500 after:transition-all hover:after:w-full"
               >
                 {link.label}
               </Link>
@@ -71,7 +71,7 @@ export function Header({ isMobileMenuOpen, setIsMobileMenuOpen, onBookClick }: H
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden p-2 rounded-lg text-dark-700 dark:text-dark-300 hover:bg-dark-100 dark:hover:bg-dark-800 transition-colors"
+            className="lg:hidden p-2 rounded-lg text-noir-700 dark:text-noir-300 hover:bg-noir-100 dark:hover:bg-noir-800 transition-colors"
             aria-expanded={isMobileMenuOpen}
             aria-controls="mobile-menu"
             aria-label={isMobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
@@ -89,12 +89,12 @@ export function Header({ isMobileMenuOpen, setIsMobileMenuOpen, onBookClick }: H
           role="navigation"
           aria-label="Menu mobile"
         >
-          <div className="flex flex-col gap-2 pt-4 border-t border-dark-200 dark:border-dark-800">
+          <div className="flex flex-col gap-2 pt-4 border-t border-noir-200 dark:border-noir-800">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="px-4 py-3 text-base font-medium text-dark-700 dark:text-dark-300 hover:text-primary-500 dark:hover:text-primary-400 hover:bg-dark-50 dark:hover:bg-dark-800 rounded-lg transition-colors"
+                className="px-4 py-3 text-base font-medium text-noir-700 dark:text-noir-300 hover:text-gold-600 dark:hover:text-gold-400 hover:bg-noir-50 dark:hover:bg-noir-800 rounded-lg transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {link.label}

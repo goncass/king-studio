@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { Barber } from '@/lib/data'
-import { Instagram, Scissors, Star } from 'lucide-react'
+import { Instagram, Scissors, Star, Crown } from 'lucide-react'
 
 interface BarberCardProps {
   barber: Barber
@@ -10,7 +10,7 @@ interface BarberCardProps {
 
 export function BarberCard({ barber }: BarberCardProps) {
   return (
-    <article className="card overflow-hidden relative group">
+    <article className="card-luxury overflow-hidden relative group">
       {/* Image */}
       <div className="relative aspect-[3/4] overflow-hidden">
         <Image
@@ -21,7 +21,7 @@ export function BarberCard({ barber }: BarberCardProps) {
           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
         />
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-dark-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-gradient-to-t from-noir-1000/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
         {/* Social */}
         {barber.instagram && (
@@ -42,16 +42,16 @@ export function BarberCard({ barber }: BarberCardProps) {
       {/* Content */}
       <div className="p-6">
         <div className="mb-3">
-          <span className="inline-block px-3 py-1 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 text-xs font-medium">
+          <span className="inline-block px-3 py-1 rounded-full bg-gold-100 text-gold-800 dark:bg-gold-900/30 dark:text-gold-300 text-xs font-medium badge-gold">
             {barber.role}
           </span>
         </div>
 
-        <h3 className="font-display text-xl font-bold text-dark-900 dark:text-white mb-2">
+        <h3 className="font-display text-xl font-bold text-noir-950 dark:text-white mb-2">
           {barber.name}
         </h3>
 
-        <p className="text-dark-600 dark:text-dark-400 text-sm mb-4 line-clamp-3">
+        <p className="text-noir-600 dark:text-noir-400 text-sm mb-4 line-clamp-3">
           {barber.bio}
         </p>
 
@@ -60,7 +60,7 @@ export function BarberCard({ barber }: BarberCardProps) {
           {barber.specialties.map((specialty) => (
             <span
               key={specialty}
-              className="px-2.5 py-1 rounded-full bg-dark-100 dark:bg-dark-800 text-dark-700 dark:text-dark-300 text-xs font-medium border border-dark-200 dark:border-dark-700"
+              className="px-2.5 py-1 rounded-full bg-gold-100 dark:bg-gold-900/30 text-gold-800 dark:text-gold-300 text-xs font-medium border border-gold-300/50 dark:border-gold-700/50 badge-gold"
             >
               {specialty}
             </span>
@@ -68,15 +68,15 @@ export function BarberCard({ barber }: BarberCardProps) {
         </div>
 
         {/* Rating */}
-        <div className="flex items-center gap-2 pt-4 border-t border-dark-200 dark:border-dark-800">
+        <div className="flex items-center gap-2 pt-4 border-t border-noir-200 dark:border-noir-800">
           <div className="flex items-center gap-0.5">
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" aria-hidden="true" />
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" aria-hidden="true" />
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" aria-hidden="true" />
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" aria-hidden="true" />
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" aria-hidden="true" />
+            <Star className="w-4 h-4 fill-gold-400 text-gold-400" aria-hidden="true" />
+            <Star className="w-4 h-4 fill-gold-400 text-gold-400" aria-hidden="true" />
+            <Star className="w-4 h-4 fill-gold-400 text-gold-400" aria-hidden="true" />
+            <Star className="w-4 h-4 fill-gold-400 text-gold-400" aria-hidden="true" />
+            <Star className="w-4 h-4 fill-gold-400 text-gold-400" aria-hidden="true" />
           </div>
-          <span className="text-sm text-dark-500 dark:text-dark-400">(49 avaliações)</span>
+          <span className="text-sm text-noir-500 dark:text-noir-400">(49 avaliações)</span>
         </div>
       </div>
     </article>
