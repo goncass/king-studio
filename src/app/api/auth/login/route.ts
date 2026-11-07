@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyPassword, createToken, checkRateLimit, getClientIp, AUTH_COOKIE_NAME, AUTH_COOKIE_OPTIONS } from '@/lib/auth'
-import { getUsers, getUserByUsername } from '@/lib/user-store'
+import { verifyUserPassword } from '@/lib/db/users'
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,20 +24,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Find user from shared store
-    const user = getUserByUsername(username)
+    // Find user and verify password from database
+    const user = await verifyUserPassword(username, password)
+
     if (!user) {
       // Use same timing to prevent username enumeration
       await verifyPassword(password, '$2a$12$dummy.hash.to.prevent.timing.attacks')
-      return NextResponse.json(
-        { error: 'Credenciais inválidas' },
-        { status: 401 }
-      )
-    }
-
-    // Verify password
-    const valid = await verifyPassword(password, user.passwordHash)
-    if (!valid) {
       return NextResponse.json(
         { error: 'Credenciais inválidas' },
         { status: 401 }

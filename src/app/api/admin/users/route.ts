@@ -4,12 +4,11 @@ import { cookies } from 'next/headers'
 import {
   getUsers,
   getUserById,
-  sanitizeUser,
   createUser,
-  updateUserWithHash,
+  updateUser,
   deleteUser,
   getAdminCount,
-} from '@/lib/user-store'
+} from '@/lib/db/users'
 
 // Verify admin access
 async function verifyAdmin(request: NextRequest): Promise<{ authorized: boolean; user?: any }> {
@@ -37,7 +36,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
   }
 
-  return NextResponse.json({ users: getUsers().map(sanitizeUser) })
+  try {
+    const users = await getUsers()
+    return NextResponse.json({ users })
+  } catch (error) {
+    console.error('Get users error:', error)
+    return NextResponse.json({ error: 'Erro ao buscar utilizadores' }, { status: 500 })
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -63,17 +68,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Senha deve ter pelo menos 8 caracteres' }, { status: 400 })
     }
 
-    // Check username uniqueness
-    const users = getUsers()
-    if (users.some(u => u.username === username)) {
-      return NextResponse.json({ error: 'Utilizador já existe' }, { status: 409 })
-    }
-
     const newUser = await createUser({ username, name, role, password })
 
-    return NextResponse.json({ user: sanitizeUser(newUser) }, { status: 201 })
-  } catch (error) {
+    return NextResponse.json({ user: newUser }, { status: 201 })
+  } catch (error: any) {
     console.error('Create user error:', error)
+    if (error.message === 'Utilizador já existe') {
+      return NextResponse.json({ error: error.message }, { status: 409 })
+    }
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }
@@ -92,27 +94,30 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'ID obrigatório' }, { status: 400 })
     }
 
-    const user = getUserById(id)
+    const user = await getUserById(id)
     if (!user) {
       return NextResponse.json({ error: 'Utilizador não encontrado' }, { status: 404 })
     }
 
     // Prevent removing last admin
     if (user.role === 'admin' && role === 'barber') {
-      const adminCount = getAdminCount()
+      const adminCount = await getAdminCount()
       if (adminCount <= 1) {
         return NextResponse.json({ error: 'Não pode remover o último admin' }, { status: 400 })
       }
     }
 
-    const updatedUser = await updateUserWithHash(id, { name, role, password })
+    const updatedUser = await updateUser(id, { name, role, password })
     if (!updatedUser) {
       return NextResponse.json({ error: 'Utilizador não encontrado' }, { status: 404 })
     }
 
-    return NextResponse.json({ user: sanitizeUser(updatedUser) })
-  } catch (error) {
+    return NextResponse.json({ user: updatedUser })
+  } catch (error: any) {
     console.error('Update user error:', error)
+    if (error.message === 'Utilizador já existe') {
+      return NextResponse.json({ error: error.message }, { status: 409 })
+    }
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }
@@ -131,20 +136,20 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'ID obrigatório' }, { status: 400 })
     }
 
-    const user = getUserById(id)
+    const user = await getUserById(id)
     if (!user) {
       return NextResponse.json({ error: 'Utilizador não encontrado' }, { status: 404 })
     }
 
     // Prevent deleting last admin
     if (user.role === 'admin') {
-      const adminCount = getAdminCount()
+      const adminCount = await getAdminCount()
       if (adminCount <= 1) {
         return NextResponse.json({ error: 'Não pode eliminar o último admin' }, { status: 400 })
       }
     }
 
-    // Prevent self-deletion (get current user from token)
+    // Prevent self-deletion
     const cookieStore = await cookies()
     const token = cookieStore.get('kingsstudio_auth')?.value
     if (token) {
@@ -154,7 +159,7 @@ export async function DELETE(request: NextRequest) {
       }
     }
 
-    const deleted = deleteUser(id)
+    const deleted = await deleteUser(id)
     if (!deleted) {
       return NextResponse.json({ error: 'Utilizador não encontrado' }, { status: 404 })
     }

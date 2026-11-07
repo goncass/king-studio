@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -36,6 +36,7 @@ import {
   X,
   Hash,
   Loader2,
+  ExternalLink,
 } from 'lucide-react'
 import { format, parseISO, startOfDay, endOfDay, isWithinInterval, subDays } from 'date-fns'
 import { pt } from 'date-fns/locale'
@@ -52,6 +53,7 @@ interface Booking {
   notes: string
   createdAt: string
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled'
+  duration?: number
 }
 
 interface User {
@@ -84,81 +86,13 @@ const STATUS_COLORS: Record<Booking['status'], string> = {
 
 const BARBERS = ['King', 'Ricardo', 'Miguel']
 
-// Demo data - in production this would come from a database
-const DEMO_BOOKINGS: Booking[] = [
-  {
-    id: 'KS-1704067200001',
-    service: 'Corte + Barba',
-    barber: 'King',
-    date: '2024-12-15',
-    time: '14:30',
-    name: 'João Silva',
-    phone: '915 271 491',
-    email: 'joao@email.com',
-    notes: 'Prefere fade baixo',
-    createdAt: '2024-12-10T10:30:00Z',
-    status: 'confirmed',
-  },
-  {
-    id: 'KS-1704067200002',
-    service: 'Fade Cut',
-    barber: 'Ricardo',
-    date: '2024-12-15',
-    time: '10:00',
-    name: 'Miguel Santos',
-    phone: '912 345 678',
-    email: '',
-    notes: '',
-    createdAt: '2024-12-11T14:20:00Z',
-    status: 'pending',
-  },
-  {
-    id: 'KS-1704067200003',
-    service: 'Navalha Quente',
-    barber: 'King',
-    date: '2024-12-14',
-    time: '16:00',
-    name: 'Pedro Costa',
-    phone: '918 765 432',
-    email: 'pedro@email.com',
-    notes: 'Pele sensível',
-    createdAt: '2024-12-12T09:15:00Z',
-    status: 'completed',
-  },
-  {
-    id: 'KS-1704067200004',
-    service: 'Corte Criança',
-    barber: 'Miguel',
-    date: '2024-12-16',
-    time: '11:00',
-    name: 'André Ferreira',
-    phone: '913 456 789',
-    email: '',
-    notes: 'Primeiro corte do filho (8 anos)',
-    createdAt: '2024-12-13T16:45:00Z',
-    status: 'confirmed',
-  },
-  {
-    id: 'KS-1704067200005',
-    service: 'Coloração',
-    barber: 'King',
-    date: '2024-12-16',
-    time: '15:30',
-    name: 'Rui Martins',
-    phone: '917 890 123',
-    email: 'rui@email.com',
-    notes: 'Cobrir brancos - tom natural',
-    createdAt: '2024-12-13T18:00:00Z',
-    status: 'pending',
-  },
-]
-
 export default function AdminPage() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'bookings' | 'users'>('bookings')
-  const [bookings, setBookings] = useState<Booking[]>(DEMO_BOOKINGS)
+  const [bookings, setBookings] = useState<Booking[]>([])
+  const [bookingsLoading, setBookingsLoading] = useState(false)
   const [filterDate, setFilterDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'))
   const [filterBarber, setFilterBarber] = useState<string>('all')
   const [filterStatus, setFilterStatus] = useState<string>('all')
@@ -194,6 +128,36 @@ export default function AdminPage() {
     }
     fetchUser()
   }, [router])
+
+  // Fetch bookings from API
+  const fetchBookings = useCallback(async () => {
+    if (!user) return
+    setBookingsLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (filterDate) params.set('date', filterDate)
+      if (filterStatus !== 'all') params.set('status', filterStatus)
+      if (user.role === 'admin' && filterBarber !== 'all') params.set('barber', filterBarber)
+      // For barbers, the API will filter by their name automatically
+
+      const response = await fetch(`/api/admin/bookings?${params.toString()}`)
+      if (response.ok) {
+        const data = await response.json()
+        setBookings(data.bookings || [])
+      }
+    } catch (error) {
+      console.error('Fetch bookings error:', error)
+    } finally {
+      setBookingsLoading(false)
+    }
+  }, [user, filterDate, filterStatus, filterBarber])
+
+  // Load bookings when filters change or user loads
+  useEffect(() => {
+    if (user && activeTab === 'bookings') {
+      fetchBookings()
+    }
+  }, [user, activeTab, fetchBookings])
 
   // Fetch admin users
   const fetchAdminUsers = async () => {
@@ -250,13 +214,33 @@ export default function AdminPage() {
     }
   }
 
-  const handleStatusChange = (id: string, newStatus: Booking['status']) => {
-    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b))
+  const handleStatusChange = async (id: string, newStatus: Booking['status']) => {
+    try {
+      const response = await fetch('/api/admin/bookings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: newStatus }),
+      })
+      if (!response.ok) throw new Error('Erro ao atualizar')
+      // Optimistic update
+      setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b))
+    } catch (error) {
+      console.error('Status change error:', error)
+      alert('Erro ao atualizar estado')
+      fetchBookings() // Refetch on error
+    }
   }
 
-  const handleDelete = (id: string) => {
-    if (confirm('Tem a certeza que quer eliminar esta reserva?')) {
+  const handleDelete = async (id: string) => {
+    if (!confirm('Tem a certeza que quer eliminar esta reserva?')) return
+
+    try {
+      const response = await fetch(`/api/admin/bookings?id=${id}`, { method: 'DELETE' })
+      if (!response.ok) throw new Error('Erro ao eliminar')
       setBookings(prev => prev.filter(b => b.id !== id))
+    } catch (error) {
+      console.error('Delete error:', error)
+      alert('Erro ao eliminar reserva')
     }
   }
 
@@ -361,8 +345,9 @@ export default function AdminPage() {
       return true
     })
     .sort((a, b) => {
-      const aVal = a[sortConfig.key]
-      const bVal = b[sortConfig.key]
+      const aVal = a[sortConfig.key] as string | number | undefined
+      const bVal = b[sortConfig.key] as string | number | undefined
+      if (aVal === undefined || bVal === undefined) return 0
       if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1
       if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1
       return 0
@@ -605,7 +590,16 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-noir-200 dark:divide-noir-800">
-                    {filteredBookings.length === 0 ? (
+                    {bookingsLoading ? (
+                      <tr>
+                        <td colSpan={user.role === 'admin' ? 8 : 7} className="px-4 py-12 text-center">
+                          <div className="flex flex-col items-center gap-3 text-noir-400">
+                            <div className="w-8 h-8 border-4 border-gold-500 border-t-transparent rounded-full animate-spin" />
+                            <p className="font-medium">A carregar reservas...</p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : filteredBookings.length === 0 ? (
                       <tr>
                         <td colSpan={user.role === 'admin' ? 8 : 7} className="px-4 py-12 text-center">
                           <div className="flex flex-col items-center gap-3 text-noir-400">
@@ -900,7 +894,7 @@ export default function AdminPage() {
                 <li>• Mínimo 8 caracteres para novas senhas</li>
                 <li>• Não pode eliminar a si próprio nem o último administrador</li>
                 <li>• Barbeiros só veem as suas próprias reservas</li>
-                <li>• Para produção, use variáveis de ambiente ou base de dados real</li>
+                <li>• Dados guardados no Supabase (PostgreSQL)</li>
               </ul>
             </div>
           </div>
