@@ -15,7 +15,6 @@ export interface Barber {
   role: string
   bio: string
   image: string
-  specialties: string[]
   instagram?: string
 }
 
@@ -58,7 +57,7 @@ export const services: Service[] = [
   {
     id: 'corte-barba',
     name: 'Corte de Barba + Cabelo',
-    description: 'Combo completo: corte de cabelo + barba completa com toalha quente.',
+    description: 'Combo completo: corte de cabelo + barba completa.',
     price: '17€',
     duration: '60 min',
     category: 'Combos',
@@ -70,38 +69,34 @@ export const barbers: Barber[] = [
   {
     id: 'barber-1',
     name: 'Nuno',
-    role: 'Fundador & Barbeiro Master',
-    bio: 'Com mais de 15 anos de experiência, o Nuno fundou a KingsStudio 2020 para trazer a verdadeira arte da barbearia clássica com toque moderno a Queluz. Especialista em fades, navalha e coloração.',
+    role: 'Barbeiro',
+    bio: 'Barbeiro.',
     image: 'https://lh3.googleusercontent.com/p/AF1QipMxBarberNuno=w400-h400',
-    specialties: ['Fade Cut', 'Navalha Quente', 'Coloração', 'Barba Premium'],
-    instagram: '@nuno_barber_master',
+    instagram: '@',
   },
   {
     id: 'barber-2',
     name: 'Ruben',
-    role: 'Barbeiro Senior',
-    bio: 'Especialista em cortes modernos e tendências atuais. Domina técnicas de texturização, cortes tesoura e styling. Atendimento personalizado para cada tipo de cabelo.',
+    role: 'Barbeiro',
+    bio: 'Barbeiro.',
     image: 'https://lh3.googleusercontent.com/p/AF1QipMxBarberRuben=w400-h400',
-    specialties: ['Corte Tesoura', 'Texturização', 'Cabelo Cacheado', 'Styling'],
-    instagram: '@ruben_cuts',
+    instagram: '@',
   },
   {
     id: 'barber-3',
     name: 'Bruno',
     role: 'Barbeiro',
-    bio: 'Focado em barbearia clássica e cortes masculinos tradicionais. Mão leve na navalha e atenção ao detalhe. Ótimo com primeiros cortes e crianças.',
+    bio: 'Barbeiro',
     image: 'https://lh3.googleusercontent.com/p/AF1QipMxBarberBruno=w400-h400',
-    specialties: ['Corte Clássico', 'Navalha', 'Crianças', 'Barba Tradicional'],
-    instagram: '@bruno_barber',
+    instagram: '@',
   },
   {
     id: 'barber-4',
     name: 'Vitor',
     role: 'Barbeiro',
-    bio: 'Especialista em barbearia moderna e tendências atuais. Domina técnicas de fades precisos, coloração e tratamentos de barba premium.',
+    bio: 'Barbeiro',
     image: 'https://lh3.googleusercontent.com/p/AF1QipMxBarberVitor=w400-h400',
-    specialties: ['Fade Cut', 'Coloração', 'Barba Premium', 'Tratamentos'],
-    instagram: '@vitor_barber',
+    instagram: '@',
   },
 ]
 
