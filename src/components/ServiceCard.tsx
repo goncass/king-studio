@@ -1,7 +1,7 @@
 'use client'
 
 import { Service } from '@/lib/data'
-import { Scissors, CheckCircle, Star, Crown } from 'lucide-react'
+import { Scissors, CheckCircle, Star } from 'lucide-react'
 
 interface ServiceCardProps {
   service: Service
@@ -31,12 +31,6 @@ export function ServiceCard({ service }: ServiceCardProps) {
         <div className="w-12 h-12 rounded-lg bg-gold-100 dark:bg-gold-900/30 flex items-center justify-center flex-shrink-0">
           <Scissors className="w-6 h-6 text-gold-600 dark:text-gold-400" aria-hidden="true" />
         </div>
-        {service.popular && (
-          <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-gold-100 text-gold-800 dark:bg-gold-900/30 dark:text-gold-300 text-xs font-medium flex-shrink-0 badge-gold">
-            <Crown className="w-3 h-3" aria-hidden="true" />
-            Popular
-          </div>
-        )}
       </div>
 
       <div className="mb-3">

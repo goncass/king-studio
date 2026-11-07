@@ -129,7 +129,7 @@ export default function HomePage() {
                 <div className="text-noir-600 dark:text-noir-400">Avaliações</div>
               </div>
               <div>
-                <div className="font-display text-4xl sm:text-5xl font-bold text-gold-500 mb-2">15+</div>
+                <div className="font-display text-4xl sm:text-5xl font-bold text-gold-500 mb-2">3</div>
                 <div className="text-noir-600 dark:text-noir-400">Serviços</div>
               </div>
               <div>

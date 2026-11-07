@@ -45,7 +45,6 @@ export const services: Service[] = [
     duration: '30 min',
     category: 'Cabelo',
     icon: 'scissors',
-    popular: true,
   },
   {
     id: 'barba-completa',
@@ -55,7 +54,6 @@ export const services: Service[] = [
     duration: '20 min',
     category: 'Barba',
     icon: 'scissors',
-    popular: true,
   },
   {
     id: 'corte-barba',
@@ -65,7 +63,6 @@ export const services: Service[] = [
     duration: '45 min',
     category: 'Combos',
     icon: 'scissors',
-    popular: true,
   },
 ]
 
