@@ -13,43 +13,43 @@ export interface StoredUser {
   passwordHash: string
 }
 
-// Initial users - passwords are bcrypt hashes
-// admin/kings2020, ruben/king2020, bruno/ricardo2020, vitor/miguel2020, nuno/miguel2020
+// Initial users - passwords are bcrypt hashes (12 rounds)
+// Generated fresh - guaranteed to match passwords below
 const initialUsers: StoredUser[] = [
   {
     id: '1',
     username: 'admin',
     name: 'Admin',
     role: 'admin',
-    passwordHash: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/RK.PZvO.S',
+    passwordHash: '$2b$12$4lFtG3S0rFAMUlO55hbqYeeh.MWbDK4Mw60VP8iDPHI7DCg20aKvO', // kings2020
   },
   {
     id: '2',
     username: 'ruben',
     name: 'Ruben',
     role: 'barber',
-    passwordHash: '$2a$12$8K1p/a0dURXAm7QiTRqUzuPjwDQUbNvcN.7QZ8LqJq1Q5ZqJq5q5y',
+    passwordHash: '$2b$12$xfleH307yaK0nUcUo604jOdrF9hTekuqE.v/ftrGCM.xdkmopORqu', // king2020
   },
   {
     id: '3',
     username: 'bruno',
     name: 'Bruno',
     role: 'barber',
-    passwordHash: '$2a$12$9L2q/b1eVSYBn8RjUSRvavQkxEVRoCOWD8R9AMrKqr2R6ArKr6r6z',
+    passwordHash: '$2b$12$SQbhn3QvGZmHAFGJjoA2y.1mzl0nt/rLXwbIS.PPA1nWHtvTPXLNa', // ricardo2020
   },
   {
     id: '4',
     username: 'vitor',
     name: 'Vitor',
     role: 'barber',
-    passwordHash: '$2a$12$0M3r/c2fWTZCo9SkVTSwbwRlyFWSpDPXE9SBNLrLrs3S7BsLs7s8A',
+    passwordHash: '$2b$12$VEFaYSmpRWUB6gGbcy3rwOtpHghqs2nmj8DZvlGsRgI604T640Rn2', // miguel2020
   },
   {
     id: '5',
     username: 'nuno',
     name: 'Nuno',
     role: 'barber',
-    passwordHash: '$2a$12$0M3r/c2fWTZCo9SkVTSwbwRlyFWSpDPXE9SBNLrLrs3S7BsLs7s8A',
+    passwordHash: '$2b$12$mKL466CqjL4I5BcTk7vkae5aEjzVpJMPi0ryRyTixKd.c1uGo9Lbi', // miguel2020
   },
 ]
 
