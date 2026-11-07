@@ -16,7 +16,7 @@ const USERS = [
     id: '2',
     username: 'king',
     name: 'King',
-    role: 'admin' as const,
+    role: 'barber' as const,
     // password: king2020 (hashed)
     passwordHash: '$2a$12$8K1p/a0dURXAm7QiTRqUzuPjwDQUbNvcN.7QZ8LqJq1Q5ZqJq5q5y',
   },
