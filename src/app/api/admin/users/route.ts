@@ -14,24 +14,31 @@ let USERS = [
   },
   {
     id: '2',
-    username: 'king',
-    name: 'King',
+    username: 'Ruben',
+    name: 'Ruben',
     role: 'barber' as const,
     passwordHash: '$2a$12$8K1p/a0dURXAm7QiTRqUzuPjwDQUbNvcN.7QZ8LqJq1Q5ZqJq5q5y', // king2020
   },
   {
     id: '3',
-    username: 'ricardo',
-    name: 'Ricardo',
+    username: 'Bruno',
+    name: 'Bruno',
     role: 'barber' as const,
     passwordHash: '$2a$12$9L2q/b1eVSYBn8RjUSRvavQkxEVRoCOWD8R9AMrKqr2R6ArKr6r6z', // ricardo2020
   },
   {
     id: '4',
-    username: 'miguel',
-    name: 'Miguel',
+    username: 'Vitor',
+    name: 'Vitor',
     role: 'barber' as const,
     passwordHash: '$2a$12$0M3r/c2fWTZCo9SkVTSwbwRlyFWSpDPXE9SBNLrLrs3S7BsLs7s8A', // miguel2020
+  },
+  {
+    id: '5',
+    username: 'Nuno',
+    name: 'Nuno',
+    role: 'barber' as const,
+    passwordHash: '$2a$12$0M3r/c2fWTZCo9SkVTSwbwRlyFWSpDPXE9SBNLrLrs3S7BsLs7s8A', // 
   },
 ]
 
