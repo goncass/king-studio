@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { Barber } from '@/lib/data'
-import { Instagram, Scissors, Star, Crown } from 'lucide-react'
+import { Instagram, Star } from 'lucide-react'
 
 interface BarberCardProps {
   barber: Barber
@@ -54,18 +54,6 @@ export function BarberCard({ barber }: BarberCardProps) {
         <p className="text-noir-600 dark:text-noir-400 text-sm mb-4 line-clamp-3">
           {barber.bio}
         </p>
-
-        {/* Specialties */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {barber.specialties.map((specialty) => (
-            <span
-              key={specialty}
-              className="px-2.5 py-1 rounded-full bg-gold-100 dark:bg-gold-900/30 text-gold-800 dark:text-gold-300 text-xs font-medium border border-gold-300/50 dark:border-gold-700/50 badge-gold"
-            >
-              {specialty}
-            </span>
-          ))}
-        </div>
 
         {/* Rating */}
         <div className="flex items-center gap-2 pt-4 border-t border-noir-200 dark:border-noir-800">

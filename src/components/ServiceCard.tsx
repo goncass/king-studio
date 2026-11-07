@@ -5,9 +5,10 @@ import { Scissors, CheckCircle, Star } from 'lucide-react'
 
 interface ServiceCardProps {
   service: Service
+  onBook?: (serviceId: string) => void
 }
 
-export function ServiceCard({ service }: ServiceCardProps) {
+export function ServiceCard({ service, onBook }: ServiceCardProps) {
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'Cabelo':
@@ -58,6 +59,7 @@ export function ServiceCard({ service }: ServiceCardProps) {
       </div>
 
       <button
+        onClick={() => onBook?.(service.id)}
         className="w-full btn-tertiary text-sm py-2 gap-2 justify-center border border-noir-300 dark:border-noir-600 hover:border-gold-500 hover:text-gold-500 transition-colors group"
       >
         Agendar este serviço

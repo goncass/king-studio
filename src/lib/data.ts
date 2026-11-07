@@ -67,35 +67,11 @@ export const services: Service[] = [
 
 export const barbers: Barber[] = [
   {
-    id: 'barber-1',
-    name: 'Nuno',
-    role: 'Barbeiro',
-    bio: 'Barbeiro.',
-    image: 'https://lh3.googleusercontent.com/p/AF1QipMxBarberNuno=w400-h400',
-    instagram: '@',
-  },
-  {
     id: 'barber-2',
     name: 'Ruben',
     role: 'Barbeiro',
     bio: 'Barbeiro.',
     image: 'https://lh3.googleusercontent.com/p/AF1QipMxBarberRuben=w400-h400',
-    instagram: '@',
-  },
-  {
-    id: 'barber-3',
-    name: 'Bruno',
-    role: 'Barbeiro',
-    bio: 'Barbeiro',
-    image: 'https://lh3.googleusercontent.com/p/AF1QipMxBarberBruno=w400-h400',
-    instagram: '@',
-  },
-  {
-    id: 'barber-4',
-    name: 'Vitor',
-    role: 'Barbeiro',
-    bio: 'Barbeiro',
-    image: 'https://lh3.googleusercontent.com/p/AF1QipMxBarberVitor=w400-h400',
     instagram: '@',
   },
 ]
