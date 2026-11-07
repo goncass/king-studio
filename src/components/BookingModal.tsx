@@ -377,13 +377,16 @@ export function BookingModal({ isOpen, onClose, preSelectedService }: BookingMod
                   <Clock className="w-5 h-5 text-gold-500" aria-hidden="true" />
                   Hora
                 </label>
+                {/* Hidden input to register time field with react-hook-form */}
+                <input type="hidden" {...register('time')} />
                 <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Escolha a hora">
                   {availableSlots.map((slot) => (
                     <button
                       key={slot}
                       type="button"
-                      onClick={() => setValue('time', slot)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all min-w-[80px] ${
+                      onClick={() => setValue('time', slot, { shouldValidate: true })}
+                      onMouseDown={(e) => e.preventDefault()} // Prevent focus issues
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all min-w-[80px] cursor-pointer ${
                         getValues('time') === slot
                           ? 'bg-gold-500 text-white'
                           : 'bg-noir-100 dark:bg-noir-800 text-noir-700 dark:text-noir-300 hover:bg-gold-100 dark:hover:bg-gold-900/30'
