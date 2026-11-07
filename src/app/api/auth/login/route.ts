@@ -1,51 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyPassword, createToken, checkRateLimit, getClientIp, AUTH_COOKIE_NAME, AUTH_COOKIE_OPTIONS } from '@/lib/auth'
-
-// User database - in production, use a real database
-// Passwords should be pre-hashed and stored in environment variables or database
-// IMPORTANT: Keep in sync with /api/admin/users route
-const USERS = [
-  {
-    id: '1',
-    username: 'admin',
-    name: 'Admin',
-    role: 'admin' as const,
-    // password: kings2020 (hashed)
-    passwordHash: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/RK.PZvO.S',
-  },
-  {
-    id: '2',
-    username: 'ruben',
-    name: 'Ruben',
-    role: 'barber' as const,
-    // password: king2020 (hashed)
-    passwordHash: '$2a$12$8K1p/a0dURXAm7QiTRqUzuPjwDQUbNvcN.7QZ8LqJq1Q5ZqJq5q5y',
-  },
-  {
-    id: '3',
-    username: 'bruno',
-    name: 'Bruno',
-    role: 'barber' as const,
-    // password: ricardo2020 (hashed)
-    passwordHash: '$2a$12$9L2q/b1eVSYBn8RjUSRvavQkxEVRoCOWD8R9AMrKqr2R6ArKr6r6z',
-  },
-  {
-    id: '4',
-    username: 'vitor',
-    name: 'Vitor',
-    role: 'barber' as const,
-    // password: miguel2020 (hashed)
-    passwordHash: '$2a$12$0M3r/c2fWTZCo9SkVTSwbwRlyFWSpDPXE9SBNLrLrs3S7BsLs7s8A',
-  },
-  {
-    id: '5',
-    username: 'nuno',
-    name: 'Nuno',
-    role: 'barber' as const,
-    // password: miguel2020 (hashed) - same hash as vitor for now
-    passwordHash: '$2a$12$0M3r/c2fWTZCo9SkVTSwbwRlyFWSpDPXE9SBNLrLrs3S7BsLs7s8A',
-  },
-]
+import { getUsers, getUserByUsername } from '@/lib/user-store'
 
 export async function POST(request: NextRequest) {
   try {
@@ -69,8 +24,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Find user
-    const user = USERS.find(u => u.username === username)
+    // Find user from shared store
+    const user = getUserByUsername(username)
     if (!user) {
       // Use same timing to prevent username enumeration
       await verifyPassword(password, '$2a$12$dummy.hash.to.prevent.timing.attacks')

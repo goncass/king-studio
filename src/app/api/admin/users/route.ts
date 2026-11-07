@@ -1,55 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { hashPassword, verifyPassword, getSession, verifyToken } from '@/lib/auth'
+import { verifyToken } from '@/lib/auth'
 import { cookies } from 'next/headers'
-
-// In-memory user store (in production, use database)
-// This mirrors the login route USERS array
-let USERS = [
-  {
-    id: '1',
-    username: 'admin',
-    name: 'Admin',
-    role: 'admin' as const,
-    passwordHash: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/RK.PZvO.S', // kings2020
-  },
-  {
-    id: '2',
-    username: 'Ruben',
-    name: 'Ruben',
-    role: 'barber' as const,
-    passwordHash: '$2a$12$8K1p/a0dURXAm7QiTRqUzuPjwDQUbNvcN.7QZ8LqJq1Q5ZqJq5q5y', // king2020
-  },
-  {
-    id: '3',
-    username: 'Bruno',
-    name: 'Bruno',
-    role: 'barber' as const,
-    passwordHash: '$2a$12$9L2q/b1eVSYBn8RjUSRvavQkxEVRoCOWD8R9AMrKqr2R6ArKr6r6z', // ricardo2020
-  },
-  {
-    id: '4',
-    username: 'Vitor',
-    name: 'Vitor',
-    role: 'barber' as const,
-    passwordHash: '$2a$12$0M3r/c2fWTZCo9SkVTSwbwRlyFWSpDPXE9SBNLrLrs3S7BsLs7s8A', // miguel2020
-  },
-  {
-    id: '5',
-    username: 'Nu',
-    name: 'Vitor',
-    role: 'barber' as const,
-    passwordHash: '$2a$12$0M3r/c2fWTZCo9SkVTSwbwRlyFWSpDPXE9SBNLrLrs3S7BsLs7s8A', // miguel2020
-  },
-]
-
-function getNextId() {
-  return String(Math.max(...USERS.map(u => parseInt(u.id))) + 1)
-}
-
-function sanitizeUser(user: typeof USERS[0]) {
-  const { passwordHash, ...rest } = user
-  return rest
-}
+import {
+  getUsers,
+  getUserById,
+  sanitizeUser,
+  createUser,
+  updateUserWithHash,
+  deleteUser,
+  getAdminCount,
+} from '@/lib/user-store'
 
 // Verify admin access
 async function verifyAdmin(request: NextRequest): Promise<{ authorized: boolean; user?: any }> {
@@ -77,7 +37,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
   }
 
-  return NextResponse.json({ users: USERS.map(sanitizeUser) })
+  return NextResponse.json({ users: getUsers().map(sanitizeUser) })
 }
 
 export async function POST(request: NextRequest) {
@@ -104,22 +64,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Check username uniqueness
-    if (USERS.some(u => u.username === username)) {
+    const users = getUsers()
+    if (users.some(u => u.username === username)) {
       return NextResponse.json({ error: 'Utilizador já existe' }, { status: 409 })
     }
 
-    // Hash password
-    const passwordHash = await hashPassword(password)
-
-    const newUser = {
-      id: getNextId(),
-      username,
-      name,
-      role,
-      passwordHash,
-    }
-
-    USERS.push(newUser)
+    const newUser = await createUser({ username, name, role, password })
 
     return NextResponse.json({ user: sanitizeUser(newUser) }, { status: 201 })
   } catch (error) {
@@ -142,30 +92,25 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'ID obrigatório' }, { status: 400 })
     }
 
-    const userIndex = USERS.findIndex(u => u.id === id)
-    if (userIndex === -1) {
+    const user = getUserById(id)
+    if (!user) {
       return NextResponse.json({ error: 'Utilizador não encontrado' }, { status: 404 })
     }
 
     // Prevent removing last admin
-    if (USERS[userIndex].role === 'admin' && role === 'barber') {
-      const adminCount = USERS.filter(u => u.role === 'admin').length
+    if (user.role === 'admin' && role === 'barber') {
+      const adminCount = getAdminCount()
       if (adminCount <= 1) {
         return NextResponse.json({ error: 'Não pode remover o último admin' }, { status: 400 })
       }
     }
 
-    // Update fields
-    if (name) USERS[userIndex].name = name
-    if (role) USERS[userIndex].role = role
-    if (password) {
-      if (password.length < 8) {
-        return NextResponse.json({ error: 'Senha deve ter pelo menos 8 caracteres' }, { status: 400 })
-      }
-      USERS[userIndex].passwordHash = await hashPassword(password)
+    const updatedUser = await updateUserWithHash(id, { name, role, password })
+    if (!updatedUser) {
+      return NextResponse.json({ error: 'Utilizador não encontrado' }, { status: 404 })
     }
 
-    return NextResponse.json({ user: sanitizeUser(USERS[userIndex]) })
+    return NextResponse.json({ user: sanitizeUser(updatedUser) })
   } catch (error) {
     console.error('Update user error:', error)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
@@ -186,14 +131,14 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'ID obrigatório' }, { status: 400 })
     }
 
-    const userIndex = USERS.findIndex(u => u.id === id)
-    if (userIndex === -1) {
+    const user = getUserById(id)
+    if (!user) {
       return NextResponse.json({ error: 'Utilizador não encontrado' }, { status: 404 })
     }
 
     // Prevent deleting last admin
-    if (USERS[userIndex].role === 'admin') {
-      const adminCount = USERS.filter(u => u.role === 'admin').length
+    if (user.role === 'admin') {
+      const adminCount = getAdminCount()
       if (adminCount <= 1) {
         return NextResponse.json({ error: 'Não pode eliminar o último admin' }, { status: 400 })
       }
@@ -209,7 +154,11 @@ export async function DELETE(request: NextRequest) {
       }
     }
 
-    USERS.splice(userIndex, 1)
+    const deleted = deleteUser(id)
+    if (!deleted) {
+      return NextResponse.json({ error: 'Utilizador não encontrado' }, { status: 404 })
+    }
+
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Delete user error:', error)
