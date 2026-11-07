@@ -231,7 +231,7 @@ export function BookingModal({ isOpen, onClose, preSelectedService }: BookingMod
                   <Scissors className="w-5 h-5 text-gold-500" aria-hidden="true" />
                   Serviço
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Escolha o serviço">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" role="radiogroup" aria-label="Escolha o serviço">
                   {services.map((service) => (
                     <label
                       key={service.id}
@@ -293,7 +293,7 @@ export function BookingModal({ isOpen, onClose, preSelectedService }: BookingMod
                   <User className="w-5 h-5 text-gold-500" aria-hidden="true" />
                   Barbeiro
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" role="radiogroup" aria-label="Escolha o barbeiro">
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3" role="radiogroup" aria-label="Escolha o barbeiro">
                   {barbers.map((barber) => (
                     <label
                       key={barber.id}
