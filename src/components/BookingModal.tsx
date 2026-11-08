@@ -31,6 +31,7 @@ interface BookingModalProps {
 export function BookingModal({ isOpen, onClose, preSelectedService }: BookingModalProps) {
   const [step, setStep] = useState(1)
   const [availableSlots, setAvailableSlots] = useState<string[]>([])
+  const [occupiedSlots, setOccupiedSlots] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
@@ -61,8 +62,8 @@ export function BookingModal({ isOpen, onClose, preSelectedService }: BookingMod
   const selectedBarber = watch('barber')
   const selectedDate = watch('date')
 
-  // Generate time slots (9:00 to 18:30, 30min intervals)
-  const generateTimeSlots = () => {
+  // Generate all time slots (9:00 to 18:30, 30min intervals)
+  const generateAllTimeSlots = () => {
     const slots: string[] = []
     for (let hour = 9; hour <= 18; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
@@ -73,7 +74,7 @@ export function BookingModal({ isOpen, onClose, preSelectedService }: BookingMod
     return slots
   }
 
-  const allTimeSlots = generateTimeSlots()
+  const allTimeSlots = generateAllTimeSlots()
 
   // Fetch available slots from API
   useEffect(() => {
@@ -89,17 +90,21 @@ export function BookingModal({ isOpen, onClose, preSelectedService }: BookingMod
           if (response.ok) {
             const data = await response.json()
             setAvailableSlots(data.availableSlots || [])
+            setOccupiedSlots(data.occupiedSlots || [])
           } else {
             setAvailableSlots([])
+            setOccupiedSlots([])
           }
         } catch (error) {
           console.error('Failed to fetch slots:', error)
           setAvailableSlots([])
+          setOccupiedSlots([])
         }
       }
       fetchSlots()
     } else {
       setAvailableSlots([])
+      setOccupiedSlots([])
     }
   }, [selectedService, selectedBarber, selectedDate])
 
@@ -119,6 +124,8 @@ export function BookingModal({ isOpen, onClose, preSelectedService }: BookingMod
       setStep(1)
       setSubmitStatus('idle')
       setErrorMessage('')
+      setAvailableSlots([])
+      setOccupiedSlots([])
     }
   }, [isOpen, reset, preSelectedService])
 
@@ -372,28 +379,51 @@ export function BookingModal({ isOpen, onClose, preSelectedService }: BookingMod
                 {/* Hidden input to register time field with react-hook-form */}
                 <input type="hidden" {...register('time')} />
                 <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Escolha a hora">
-                  {availableSlots.map((slot) => (
-                    <button
-                      key={slot}
-                      type="button"
-                      onClick={() => setValue('time', slot, { shouldValidate: true })}
-                      onMouseDown={(e) => e.preventDefault()} // Prevent focus issues
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all min-w-[80px] cursor-pointer ${
-                        getValues('time') === slot
-                          ? 'bg-gold-500 text-white'
-                          : 'bg-noir-100 dark:bg-noir-800 text-noir-700 dark:text-noir-300 hover:bg-gold-100 dark:hover:bg-gold-900/30'
-                      }`}
-                      aria-pressed={getValues('time') === slot}
-                    >
-                      {slot}
-                    </button>
-                  ))}
-                  {availableSlots.length === 0 && selectedDate && (
+                  {allTimeSlots.map((slot) => {
+                    const isOccupied = occupiedSlots.includes(slot)
+                    const isSelected = getValues('time') === slot
+                    const isAvailable = availableSlots.includes(slot)
+
+                    if (isOccupied) {
+                      // Occupied slot - show as disabled/unavailable
+                      return (
+                        <button
+                          key={slot}
+                          type="button"
+                          disabled
+                          className="px-4 py-2 rounded-lg text-sm font-medium min-w-[80px] cursor-not-allowed bg-noir-200 dark:bg-noir-700 text-noir-400 dark:text-noir-500 line-through"
+                          aria-disabled="true"
+                          aria-label={`${slot} - Indisponível`}
+                        >
+                          {slot}
+                        </button>
+                      )
+                    }
+
+                    // Available slot - normal clickable
+                    return (
+                      <button
+                        key={slot}
+                        type="button"
+                        onClick={() => setValue('time', slot, { shouldValidate: true })}
+                        onMouseDown={(e) => e.preventDefault()}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all min-w-[80px] cursor-pointer ${
+                          isSelected
+                            ? 'bg-gold-500 text-white'
+                            : 'bg-noir-100 dark:bg-noir-800 text-noir-700 dark:text-noir-300 hover:bg-gold-100 dark:hover:bg-gold-900/30'
+                        }`}
+                        aria-pressed={isSelected}
+                      >
+                        {slot}
+                      </button>
+                    )
+                  })}
+                  {availableSlots.length === 0 && occupiedSlots.length === 0 && selectedDate && (
                     <p className="text-sm text-noir-500 dark:text-noir-400 col-span-full text-center py-4">
                       Sem horários disponíveis para esta data. Escolha outra data.
                     </p>
                   )}
-                  {availableSlots.length === 0 && !selectedDate && (
+                  {allTimeSlots.length === 0 && !selectedDate && (
                     <p className="text-sm text-noir-500 dark:text-noir-400 col-span-full text-center py-4">
                       Selecione uma data para ver horários disponíveis
                     </p>
